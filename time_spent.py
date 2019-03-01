@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+from zipfile import ZipFile
 
 # TODO
 """
@@ -11,24 +12,26 @@ add in total life time spent
 
 """
 
-def time_spent(rootdir = "/home/patrick/Documents/PSFeb19", HOMEINCLUDED = False, home = "GB"):
+def time_spent(rootdir = "/home/patrick/Documents/PSFeb19", HOMEINCLUDED = False):
     """
-    takes in base directory of a Polarsteps data request
+    takes in either Polarsteps zip file or the base
+    directory of an extracted Polarsteps data request
     and returns the time spent (in seconds) in each country
     if trips are not started and ended at home set HOMEINCLUDED = True
     to include the bookend steps
     accounted_for tracks the time in the users history that has been
     allocated a country, for possible future functionality
     """
+
+    # variables not required now but might for future functionality
     homelat = 0
     homelon = 0
+    home = "GB"
 
-    rootdir = rootdir + "/trip/**/*"
-    file_list = [f for f in glob.iglob(rootdir, recursive=True) if os.path.isfile(f)]
-    location_list = []
-    for f in file_list:
-        if f[-9:] == "trip.json":
-            location_list.append(f)
+    if rootdir[-4:] == ".zip":
+        location_list = zip(rootdir)
+    else:
+        location_list = dir(rootdir)
 
     if not location_list:
         return None
@@ -46,7 +49,6 @@ def time_spent(rootdir = "/home/patrick/Documents/PSFeb19", HOMEINCLUDED = False
             if HOMEINCLUDED:
                 end = data["end_date"]
                 trips[j].append([end, home, homelon, homelat])
-
         j += 1
 
     countries = {}
@@ -72,6 +74,27 @@ def time_spent(rootdir = "/home/patrick/Documents/PSFeb19", HOMEINCLUDED = False
                 started = start_time
         accounted_for.append([started, start_time])
     return countries
+
+def zip(file_name):
+    with ZipFile(file_name, 'r') as zip:
+        # printing all the contents of the zip file
+        location_list = []
+        for f in zip.namelist():
+            if f[-9:] == "trip.json":
+                location_list.append(f)
+        print(location_list)
+    return location_list
+
+def dir(rootdir):
+    rootdir = rootdir + "/trip/**/*"
+    file_list = [f for f in glob.iglob(rootdir, recursive=True) if os.path.isfile(f)]
+    location_list = []
+    for f in file_list:
+        if f[-9:] == "trip.json":
+            location_list.append(f)
+    return location_list
+
+
 
 if __name__=="__main__":
     time_spent()
